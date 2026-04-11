@@ -1,16 +1,21 @@
 {
   "domain": "hisense_tv",
   "name": "Hisense TV MQTT Bridge",
-  "version": "22.05.09",
-  "documentation": "https://github.com/sehaas/ha_hisense_tv",
+  "version": "v0.2.02",
   "dependencies": [
-    "mqtt"
+    "mqtt",
+    "ssdp"
   ],
-  "codeowners": [
-    "@sehaas"
+  "ssdp": [
+    {
+      "st": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    }
   ],
-  "requirements": [
-    "wakeonlan==2.0.1"
-  ],
+  "documentation": "https://github.com/sven-probst/ha_hisense_tv/blob/main/README.md",
+  "issue_tracker": "https://github.com/sven-probst/ha_hisense_tv/issues",
+  "codeowners": ["@sven-probst"],
+  "requirements": ["wakeonlan"],
+  "iot_class": "local_push",
+  "loggers": ["hisense_tv"],
   "config_flow": true
 }

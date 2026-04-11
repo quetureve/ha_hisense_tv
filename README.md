@@ -1,7 +1,7 @@
 # Hisense TV Integration for Home Assistant
-# This is a fork from sehaas/ha_hisense_tv, with some merged changes and PRs.
+# This is a fork from sehaas/ha_hisense_tv and V4n1X/ha_hisense_tv, with some merged changes and PRs.
 
-Integration an Hisense TV as media player into Home Assistant. The communication is handled via the integrated MQTT broker and wake-on-LAN.
+Integration for an Hisense TV as media player into Home Assistant. The communication is handled via the integrated MQTT broker and wake-on-LAN.
 Requires Home Assistant >= `2021.12.x`.
 
 ## Current features:
@@ -15,10 +15,14 @@ Requires Home Assistant >= `2021.12.x`.
   * LNB selector
   * Channel selector
   * Apps
-* Read picture setting
+* send keys as single or as sequence from a array via action
+* send touchpad dx/dy-values
+* autodetect TV
+* touchpad support
+* compatibility-layer to webos-tv (choose this TV type while using https://github.com/Nerwyn/universal-remote-card )
 
 TBD:
-* Expose ON/OFF as switch
+* Read picture setting
 * Expose all keys as buttons
 * Enhance EPG/guide handling
 
@@ -86,10 +90,201 @@ The TV can be turned on by a Wake-on-LAN packet. The MAC address must be configu
 
 The integration can be added via the Home Assistant UI. Add the integration and setup your TV. During the first setup your TV should be turned on. The integration requires a PIN code from you TV. The PIN will be triggered automatically during setup. This is a onetime step where the client `HomeAssistant` is requesting access to remote controll the TV.
 
+## Using with https://github.com/Nerwyn/universal-remote-card
+
+working example (please change entities to your control- and power-entity)
+
+~~~
+type: custom:universal-remote-card
+platform: LG webOS
+entity: media_player.wohnzimmer_tv_steuerung
+rows:
+  - - power
+    - volume_mute
+    - language
+  - - menu
+    - home
+  - - - exit
+      - guide
+    - navigation_buttons
+    - - channel_up
+      - channel_down
+  - - back
+  - - red
+    - green
+    - yellow
+    - blue
+  - - youtube
+    - launch_browser
+    - keyboard
+    - textbox
+  - - rewind
+    - fast_forward
+    - play
+    - pause
+    - stop
+  - - monitor_on
+    - monitor_off
+    - fm_radio
+  - touchpad
+media_player_id: media_player.wohnzimmer_tv_steuerung
+custom_actions:
+  - type: button
+    name: launch_browser
+    icon: mdi:web
+    tap_action:
+      action: perform-action
+      data:
+        app_name: TV Browser
+      target:
+        entity_id: media_player.wohnzimmer_tv_steuerung
+      perform_action: hisense_tv.launch_app
+  - type: button
+    name: monitor_off
+    icon: mdi:monitor-off
+    tap_action:
+      action: perform-action
+      data:
+        key:
+          - EXIT
+          - EXIT
+          - MENU
+          - UP
+          - UP
+          - OK
+      perform_action: hisense_tv.send_key
+      target:
+        entity_id: media_player.wohnzimmer_tv_steuerung
+  - type: button
+    name: monitor_on
+    icon: mdi:monitor
+    tap_action:
+      action: perform-action
+      data:
+        key:
+          - EXIT
+          - EXIT
+      perform_action: hisense_tv.send_key
+      target:
+        entity_id: media_player.wohnzimmer_tv_steuerung
+  - type: button
+    name: fm_radio
+    icon: mdi:radio
+    tap_action:
+      action: perform-action
+      data:
+        key:
+          - EXIT
+          - 6
+          - 1
+          - EXIT
+          - EXIT
+          - MENU
+          - UP
+          - UP
+          - OK
+      perform_action: hisense_tv.send_key
+      target:
+        entity_id: media_player.wohnzimmer_tv_steuerung
+  - type: button
+    name: language
+    icon: mdi:translate
+    tap_action:
+      action: perform-action
+      data:
+        key: LANG
+      target:
+        entity_id: media_player.wohnzimmer_tv_steuerung
+      perform_action: hisense_tv.send_key
+  - type: touchpad
+    name: touchpad
+    tap_action:
+      action: perform-action
+      data:
+        key: OK
+      perform_action: hisense_tv.send_key
+      target:
+        entity_id: media_player.wohnzimmer_tv_steuerung
+    up:
+      tap_action:
+        action: key
+        key: up
+      hold_action:
+        action: repeat
+      type: button
+      styles: ""
+    down:
+      tap_action:
+        action: key
+        key: down
+      hold_action:
+        action: repeat
+      type: button
+    left:
+      tap_action:
+        action: key
+        key: left
+      hold_action:
+        action: repeat
+      type: button
+    right:
+      tap_action:
+        action: key
+        key: right
+      hold_action:
+        action: repeat
+      type: button
+    drag_action:
+      action: perform-action
+      perform_action: hisense_tv.send_mouse_event
+      data:
+        dx: |
+          {{ deltaX }}
+        dy: |
+          {{ deltaY }}
+      target:
+        entity_id: media_player.wohnzimmer_tv_steuerung
+      repeat_delay: 1
+    styles: |-
+      :host {
+        top: 50%;
+        left: 50%;
+        width: 80%;
+        height: 80%;
+      }
+      toucharea {
+       border-radius: 10px;
+       border: 1px solid #444;
+      }
+    hold_action:
+      action: keyboard
+      media_player_id: media_player.wohnzimmer_tv_steuerung
+styles: |-
+  #green::part(icon) {
+    color: green;
+  }
+  #red::part(icon) {
+    color: red;
+  }
+  #blue::part(icon) {
+    color: blue;
+  }
+  #yellow::part(icon) {
+    color: yellow;
+  }
+  #power::part(icon) {
+    color: {% if  is_state('switch.wohnzimmer_tv_power','on') %}
+                red
+           {% else %}
+                blue
+           {% endif %};
+  }
+~~~
+
 # YMMV
 
-Tested on an [Hisense A71 Series](https://hisenseme.com/product/75-65-58-55-50-43-a71-series/) with mandatory client certificates. `gettvstate` does not return a `state` but can be used to authenticate the client.
-The 
+Tested on an [Toshiba 40LV3E63DG](https://toshiba-tv.com/de-de/smart-tvs/40lv3e63dg) with mandatory client certificates. `gettvstate` does not return a `state` but can be used to authenticate the client.
+
 
 # Acknowledgment
 Everything I needed to write this integration could be gathered from these sources. Information about the MQTT topics, credentials or certificates can be found there.

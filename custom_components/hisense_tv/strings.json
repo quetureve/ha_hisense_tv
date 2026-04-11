@@ -16,6 +16,19 @@
                     "pin": "[%key:common::config_flow::data::pin%]"
                 }
             }
+        },
+        "options": {
+            "step": {
+                "init": {
+                    "title": "[%key:component::hisense_tv::options::step::init::title%]",
+                    "data": {
+                        "ip_address": "[%key:common::config_flow::data::ip_address%]",
+                        "mqtt_in": "[%key:component::hisense_tv::options::step::init::data::mqtt_in%]",
+                        "mqtt_out": "[%key:component::hisense_tv::options::step::init::data::mqtt_out%]"
+                    },
+                    "description": "[%key:component::hisense_tv::options::step::init::description%]"
+                }
+            }
         }
     }
 }
