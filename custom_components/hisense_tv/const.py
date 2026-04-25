@@ -1,32 +1,10 @@
 """Constants for the Hisense TV integration."""
 
-# Attributes
 ATTR_CODE = "auth_code"
-CONF_MQTT_IN = "mqtt_in" 
-CONF_KEY_DELAY = "key_delay"
+CONF_MQTT_IN = "mqtt_in"
 CONF_MQTT_OUT = "mqtt_out"
 DATA_KEY = "media_player.hisense_tv"
 DEFAULT_CLIENT_ID = "HomeAssistant"
 DEFAULT_MQTT_PREFIX = "hisense"
 DEFAULT_NAME = "Hisense TV"
-DEFAULT_KEY_DELAY = 0.4
 DOMAIN = "hisense_tv"
-
-# Discovery
-SSDP_ST = "urn:schemas-upnp-org:device:MediaRenderer:1"
-
-# Services
-SERVICE_SEND_KEY = "send_key"
-SERVICE_SEND_CHANNEL = "send_channel"
-SERVICE_LAUNCH_APP = "launch_app"
-SERVICE_SEND_TEXT = "send_text"
-SERVICE_SEND_MOUSE_EVENT = "send_mouse_event"
-
-# Service attributes
-ATTR_KEY = "key"
-ATTR_ENTITY_ID = "entity_id"
-ATTR_CHANNEL = "channel"
-ATTR_APP_NAME = "app_name"
-ATTR_TEXT = "text"
-ATTR_DX = "dx"
-ATTR_DY = "dy"
