@@ -1,0 +1,170 @@
+send_key:
+  name: Send Key(s)
+  description: Sends one or more specific key commands to a Hisense TV.
+  target:
+    entity:
+      integration: hisense_tv
+      domain: media_player
+  fields:
+    key:
+      name: Key(s)
+      description: The key command(s) to send. Can be a single key or a list of keys.
+      required: true
+      example: POWER
+      selector:
+        select:
+          multiple: true
+          options:
+            - label: Power
+              value: POWER
+            - label: Volume Up
+              value: VOLUMEUP
+            - label: Volume Down
+              value: VOLUMEDOWN
+            - label: Mute
+              value: MUTE
+            - label: Channel Up
+              value: CHANNELUP
+            - label: Channel Down
+              value: CHANNELDOWN
+            - label: Home
+              value: HOME
+            - label: Menu
+              value: MENU
+            - label: Returns (Back)
+              value: RETURNS
+            - label: Exit
+              value: EXIT
+            - label: Source
+              value: SOURCE
+            - label: Info
+              value: INFO
+            - label: Red Button
+              value: RED
+            - label: Green Button
+              value: GREEN
+            - label: Yellow Button
+              value: YELLOW
+            - label: Blue Button
+              value: BLUE
+            - label: Up Arrow
+              value: UP
+            - label: Down Arrow
+              value: DOWN
+            - label: Left Arrow
+              value: LEFT
+            - label: Right Arrow
+              value: RIGHT
+            - label: OK
+              value: OK
+            - label: Play
+              value: PLAY
+            - label: Pause
+              value: PAUSE
+            - label: Stop
+              value: STOP
+            - label: Back (rewind)
+              value: BACK
+            - label: Forward (fast forward)
+              value: FORWARDS
+            - label: Record
+              value: RECORD
+            - label: Number 0
+              value: '0'
+            - label: Number 1
+              value: '1'
+            - label: Number 2
+              value: '2'
+            - label: Number 3
+              value: '3'
+            - label: Number 4
+              value: '4'
+            - label: Number 5
+              value: '5'
+            - label: Number 6
+              value: '6'
+            - label: Number 7
+              value: '7'
+            - label: Number 8
+              value: '8'
+            - label: Number 9
+              value: '9'
+
+send_channel:
+  name: Send Channel
+  description: Sends a channel number to a Hisense TV by sending an EXIT command first, then individual digits.
+  target:
+    entity:
+      integration: hisense_tv
+      domain: media_player
+  fields:
+    channel:
+      name: Channel Number
+      description: The channel number to send (e.g., 1, 10, 101).
+      required: true
+      example: 101
+      selector:
+        number:
+          min: 0
+          max: 9999
+
+launch_app:
+  name: Launch Application
+  description: Launches an application on the Hisense TV.
+  target:
+    entity:
+      integration: hisense_tv
+      domain: media_player
+  fields:
+    app_name:
+      name: Application Name
+      description: The name of the application to launch (e.g., "youtube", "netflix").
+      required: true
+      example: "youtube"
+      selector:
+        text:
+
+send_text:
+  name: Send Text
+  description: Sends a text string to the Hisense TV.
+  target:
+    entity:
+      integration: hisense_tv
+      domain: media_player
+  fields:
+    text:
+      name: Text
+      description: The text string to send.
+      required: true
+      example: "Hello World"
+      selector:
+        text:
+
+send_mouse_event:
+  name: Send Mouse Event
+  description: Sends a relative mouse movement event to the Hisense TV.
+  target:
+    entity:
+      integration: hisense_tv
+      domain: media_player
+  fields:
+    dx:
+      name: Delta X
+      description: The relative horizontal movement.
+      required: true
+      example: 10
+      selector:
+        number:
+          min: -32768
+          max: 32767
+          step: 1
+    dy:
+      name: Delta Y
+      description: The relative vertical movement.
+      required: true
+      example: -10
+      selector:
+        number:
+          min: -32768
+          max: 32767
+          step: 1

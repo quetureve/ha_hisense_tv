@@ -1,0 +1,18 @@
+{
+  "domain": "hisense_tv",
+  "name": "Hisense TV",
+  "version": "26.9.0",
+  "documentation": "https://github.com/sehaas/ha_hisense_tv",
+  "codeowners": [
+    "@sehaas"
+  ],
+  "dependencies": [
+    "file_upload"
+  ],
+  "requirements": [
+    "wakeonlan==2.0.1",
+    "paho-mqtt>=2.1.0,<3.0.0"
+  ],
+  "config_flow": true,
+  "iot_class": "local_push"
+}

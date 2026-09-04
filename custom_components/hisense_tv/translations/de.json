@@ -1,0 +1,36 @@
+{
+    "title": "Hisense TV",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Mit deinem Hisense-Fernseher verbinden",
+                "description": "Verbindet sich direkt mit dem MQTT-Broker des Fernsehers - keine separate Mosquitto-Bridge n\u00f6tig. Lade unten die CA- und Client-Zertifikatsdateien f\u00fcr deinen Fernseher hoch (dieselben, die bisher f\u00fcr die Mosquitto-Bridge verwendet wurden). Beim erneuten Konfigurieren: ein leeres Zertifikatsfeld beh\u00e4lt die bereits hinterlegte Datei.",
+                "data": {
+                    "name": "Name (z.B. Wohnzimmer-Fernseher)",
+                    "mac": "MAC-Adresse (f\u00fcr WakeOnLAN)",
+                    "ip_address": "IP-Adresse",
+                    "mqtt_port": "Broker-Port",
+                    "tls_ca_cert_upload": "CA-Zertifikat (leer lassen, falls nicht erforderlich)",
+                    "tls_client_cert_upload": "Client-Zertifikat (leer lassen, falls nicht erforderlich)",
+                    "tls_client_key_upload": "Client-Schl\u00fcssel (leer lassen, falls nicht erforderlich)"
+                }
+            },
+            "auth": {
+                "title": "PIN eingeben",
+                "description": "Bitte gib den auf dem Fernsehbildschirm angezeigten PIN-Code ein.",
+                "data": {
+                    "pin": "PIN-Code"
+                }
+            }
+        },
+        "progress": {
+            "progress_action": "Warte auf Antwort des Fernsehers\u2026"
+        },
+        "error": {
+            "cannot_connect": "Verbindung zum Broker des Fernsehers fehlgeschlagen. Pr\u00fcfe IP-Adresse, Port und Zertifikatsdateien."
+        },
+        "abort": {
+            "reconfigure_successful": "Einstellungen erfolgreich aktualisiert."
+        }
+    }
+}

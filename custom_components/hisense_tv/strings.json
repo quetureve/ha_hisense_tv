@@ -1,0 +1,36 @@
+{
+    "title": "Hisense TV",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Connect to your Hisense TV",
+                "description": "Connects directly to the TV's own MQTT broker - no separate Mosquitto bridge needed. Upload the CA and client certificate files for your TV below (the same ones previously used for a Mosquitto bridge config). When reconfiguring, leave a certificate field empty to keep the file already on file.",
+                "data": {
+                    "name": "Name",
+                    "mac": "MAC address (for Wake-on-LAN)",
+                    "ip_address": "IP address",
+                    "mqtt_port": "Broker port",
+                    "tls_ca_cert_upload": "CA certificate (leave empty if not required)",
+                    "tls_client_cert_upload": "Client certificate (leave empty if not required)",
+                    "tls_client_key_upload": "Client key (leave empty if not required)"
+                }
+            },
+            "auth": {
+                "title": "Enter the PIN",
+                "description": "Enter the PIN code shown on the TV screen.",
+                "data": {
+                    "pin": "PIN code"
+                }
+            }
+        },
+        "progress": {
+            "progress_action": "Waiting for the TV to respond\u2026"
+        },
+        "error": {
+            "cannot_connect": "Could not connect to the TV's broker. Check the IP address, port, and certificate files."
+        },
+        "abort": {
+            "reconfigure_successful": "Settings updated successfully."
+        }
+    }
+}
