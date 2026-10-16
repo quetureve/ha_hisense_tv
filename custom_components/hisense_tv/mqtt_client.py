@@ -13,12 +13,23 @@ never have to deal with thread safety themselves.
 import asyncio
 from dataclasses import dataclass
 import logging
+from collections.abc import Awaitable, Callable
 import ssl
-from typing import Awaitable, Callable, Optional
+from typing import Optional
 
 import paho.mqtt.client as paho
 
 _LOGGER = logging.getLogger(__name__)
+
+# paho pings after one idle keepalive interval and then waits one more for the
+# answer, so a TV that vanished is noticed after up to 2x this value (the old
+# value of 60 meant up to ~2 minutes).
+KEEPALIVE = 20
+# paho's default reconnect backoff doubles up to 120 s. While the TV is off the
+# client keeps retrying, so after power-on the next attempt could be two
+# minutes away. Cap it so a reconnect happens within seconds.
+RECONNECT_MIN_DELAY = 1
+RECONNECT_MAX_DELAY = 10
 
 
 @dataclass
@@ -36,6 +47,7 @@ class Message:
 
 
 MessageCallback = Callable[[Message], Awaitable[None]]
+ConnectCallback = Callable[[], Awaitable[None]]
 
 
 class HisenseMqttError(Exception):
@@ -68,6 +80,7 @@ class HisenseMqttClient:
         self._client_key = client_key
         self._loop: Optional[asyncio.AbstractEventLoop] = None
         self._subscriptions: dict[str, list[MessageCallback]] = {}
+        self._connect_callbacks: list[ConnectCallback] = []
         self.connected = asyncio.Event()
         self._client: Optional[paho.Client] = None
 
@@ -96,18 +109,39 @@ class HisenseMqttClient:
             )
             client.tls_insecure_set(True)
 
+        client.reconnect_delay_set(
+            min_delay=RECONNECT_MIN_DELAY, max_delay=RECONNECT_MAX_DELAY
+        )
         client.on_connect = self._on_connect
+        client.on_connect_fail = self._on_connect_fail
         client.on_disconnect = self._on_disconnect
         client.on_message = self._on_message
         return client
 
-    async def async_connect(self, timeout: float = 15.0) -> None:
-        """Open the connection and wait for the broker to accept it."""
+    async def async_connect(
+        self, timeout: float = 15.0, required: bool = True
+    ) -> None:
+        """Open the connection.
+
+        required=True: raise HisenseMqttError if the broker can't be reached
+        (the config flow needs this to report problems to the user).
+
+        required=False: never fail just because the TV is off - keep retrying
+        in the background and connect as soon as it is reachable, so Home
+        Assistant doesn't need its own (slow, growing) setup-retry cycle.
+        Problems that can't fix themselves, such as unreadable certificate
+        files, still raise.
+        """
         self._loop = asyncio.get_running_loop()
 
         def _connect():
             self._client = self._build_paho_client()
-            self._client.connect(self._host, self._port, keepalive=60)
+            if required:
+                self._client.connect(self._host, self._port, keepalive=KEEPALIVE)
+            else:
+                self._client.connect_async(
+                    self._host, self._port, keepalive=KEEPALIVE
+                )
             self._client.loop_start()
 
         try:
@@ -124,10 +158,30 @@ class HisenseMqttClient:
         try:
             await asyncio.wait_for(self.connected.wait(), timeout=timeout)
         except asyncio.TimeoutError as err:
-            await self.async_disconnect()
-            raise HisenseMqttError(
-                f"Timed out connecting to {self._host}:{self._port}"
-            ) from err
+            if required:
+                await self.async_disconnect()
+                raise HisenseMqttError(
+                    f"Timed out connecting to {self._host}:{self._port}"
+                ) from err
+            _LOGGER.info(
+                "TV broker at %s:%s is not reachable yet (TV off?) - "
+                "will connect in the background as soon as it is up",
+                self._host,
+                self._port,
+            )
+
+    def add_connect_callback(self, callback: ConnectCallback) -> Callable[[], None]:
+        """Call `callback` every time the connection is (re)established.
+
+        Returns a function that removes the callback again.
+        """
+        self._connect_callbacks.append(callback)
+
+        def _remove() -> None:
+            if callback in self._connect_callbacks:
+                self._connect_callbacks.remove(callback)
+
+        return _remove
 
     async def async_disconnect(self) -> None:
         if self._client is None:
@@ -143,13 +197,23 @@ class HisenseMqttClient:
         if reason_code.is_failure:
             _LOGGER.error("HisenseMqttClient connect failed: %s", reason_code)
             return
-        _LOGGER.debug("HisenseMqttClient connected to %s:%s", self._host, self._port)
+        _LOGGER.info("Connected to the TV's broker at %s:%s", self._host, self._port)
         for topic in list(self._subscriptions):
             client.subscribe(topic)
         self._loop.call_soon_threadsafe(self.connected.set)
+        # Subscriptions are sent first, so the TV's answers to whatever the
+        # callbacks ask for (state, volume, sources...) will reach the entities.
+        for callback in list(self._connect_callbacks):
+            asyncio.run_coroutine_threadsafe(callback(), self._loop)
+
+    def _on_connect_fail(self, client, userdata):
+        # Fires on every failed attempt while the TV is off - debug only.
+        _LOGGER.debug(
+            "Connection attempt to %s:%s failed, will retry", self._host, self._port
+        )
 
     def _on_disconnect(self, client, userdata, disconnect_flags, reason_code, properties):
-        _LOGGER.debug("HisenseMqttClient disconnected: %s", reason_code)
+        _LOGGER.info("Disconnected from the TV's broker: %s", reason_code)
         if self._loop is not None:
             self._loop.call_soon_threadsafe(self.connected.clear)
 
